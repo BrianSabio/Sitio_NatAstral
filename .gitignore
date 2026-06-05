@@ -23,4 +23,4 @@ yarn-error.log*
 
 # Logs del sistema y del agente de Antigravity
 *.log
-.agents/logs/
+.agents/*

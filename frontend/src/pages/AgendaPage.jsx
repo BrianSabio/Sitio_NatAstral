@@ -100,12 +100,13 @@ const AgendaPage = () => {
     fetchDisponibilidad();
   }, [diaSeleccionado, servicio.duracion_minutos]);
 
-  // Formateador de moneda para Chile (CLP)
+  // Formateador de moneda para Argentina (ARS) — unificado con ServicioCard
   const formatPrecio = (precio) => {
-    return new Intl.NumberFormat('es-CL', {
+    return new Intl.NumberFormat('es-AR', {
       style: 'currency',
-      currency: 'CLP',
+      currency: 'ARS',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(precio);
   };
 

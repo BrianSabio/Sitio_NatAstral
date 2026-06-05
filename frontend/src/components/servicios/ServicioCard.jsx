@@ -23,8 +23,6 @@ const ServicioCard = ({ servicio, onReservar }) => {
   const handleReservar = () => {
     if (onReservar) {
       onReservar(servicio);
-    } else {
-      console.log('[ServicioCard] Reservar turno para:', nombre);
     }
   };
 

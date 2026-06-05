@@ -7,57 +7,13 @@
 
 import prisma from '../config/db.js';
 
-// =============================================================================
-// FUNCIONES AUXILIARES PRIVADAS
-// =============================================================================
-
-/**
- * Valida que un string tenga formato de hora 'HH:MM' (24 hs) y que los
- * valores de horas y minutos sean rangos numéricos válidos.
- * @param {string} hora - El string a validar.
- * @returns {boolean} - true si el formato es válido, false en caso contrario.
- */
-const esHoraValida = (hora) => {
-    if (typeof hora !== 'string') return false;
-    // Expresión regular estricta: dos dígitos, dos puntos, dos dígitos
-    const regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-    return regex.test(hora);
-};
-
-/**
- * Convierte un string 'HH:MM' a un número de minutos totales desde medianoche.
- * Facilita la comparación aritmética de horas sin necesidad de objetos Date.
- * @param {string} hora - String en formato 'HH:MM'.
- * @returns {number} - Minutos totales desde las 00:00.
- */
-const horaAMinutos = (hora) => {
-    const [hh, mm] = hora.split(':').map(Number);
-    return hh * 60 + mm;
-};
-
-/**
- * Convierte un número de minutos totales de vuelta a string 'HH:MM'.
- * @param {number} minutos - Total de minutos desde las 00:00.
- * @returns {string} - Hora en formato 'HH:MM'.
- */
-const minutosAHora = (minutos) => {
-    const hh = Math.floor(minutos / 60).toString().padStart(2, '0');
-    const mm = (minutos % 60).toString().padStart(2, '0');
-    return `${hh}:${mm}`;
-};
-
-/**
- * Extrae la hora 'HH:MM' de un objeto DateTime de Prisma/PostgreSQL.
- * Prisma devuelve los campos `@db.Time` como objetos Date con la fecha base
- * siendo 1970-01-01. Usamos UTC para evitar desfases de zona horaria.
- * @param {Date} fechaHora - Objeto Date retornado por Prisma para un campo Time.
- * @returns {string} - Hora en formato 'HH:MM'.
- */
-const extraerHora = (fechaHora) => {
-    const hh = fechaHora.getUTCHours().toString().padStart(2, '0');
-    const mm = fechaHora.getUTCMinutes().toString().padStart(2, '0');
-    return `${hh}:${mm}`;
-};
+// --- Importación centralizada de utilidades de fecha/hora (DRY) ---
+import {
+    esHoraValida,
+    horaAMinutos,
+    minutosAHora,
+    extraerHora,
+} from '../utils/date.utils.js';
 
 // =============================================================================
 // CRUD DE LA GRILLA DE DISPONIBILIDAD

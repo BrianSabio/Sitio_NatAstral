@@ -14,71 +14,15 @@
 import { google } from 'googleapis';
 import prisma from '../config/db.js';
 
-// =============================================================================
-// FUNCIONES AUXILIARES PRIVADAS
-// =============================================================================
-
-/**
- * Valida que un string tenga formato de fecha 'YYYY-MM-DD'.
- * @param {string} fecha
- * @returns {boolean}
- */
-const esFechaValida = (fecha) => {
-    if (typeof fecha !== 'string') return false;
-    return /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(fecha);
-};
-
-/**
- * Valida que un string tenga formato de hora 'HH:MM'.
- * @param {string} hora
- * @returns {boolean}
- */
-const esHoraValida = (hora) => {
-    if (typeof hora !== 'string') return false;
-    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hora);
-};
-
-/**
- * Convierte 'HH:MM' a minutos totales desde medianoche.
- * @param {string} hora
- * @returns {number}
- */
-const horaAMinutos = (hora) => {
-    const [hh, mm] = hora.split(':').map(Number);
-    return hh * 60 + mm;
-};
-
-/**
- * Convierte minutos totales a string 'HH:MM'.
- * @param {number} minutos
- * @returns {string}
- */
-const minutosAHora = (minutos) => {
-    const hh = Math.floor(minutos / 60).toString().padStart(2, '0');
-    const mm = (minutos % 60).toString().padStart(2, '0');
-    return `${hh}:${mm}`;
-};
-
-/**
- * Construye un Date UTC puro para campos @db.Date de Prisma.
- * Evita desfases de zona horaria en el almacenamiento.
- * @param {string} fechaStr - 'YYYY-MM-DD'
- * @returns {Date}
- */
-const fechaADateUTC = (fechaStr) => {
-    const [anio, mes, dia] = fechaStr.split('-').map(Number);
-    return new Date(Date.UTC(anio, mes - 1, dia));
-};
-
-/**
- * Construye un Date UTC puro para campos @db.Time(6) de Prisma.
- * Usa la fecha base 1970-01-01 como convención para valores TIME.
- * @param {string} horaStr - 'HH:MM'
- * @returns {Date}
- */
-const horaADateUTC = (horaStr) => {
-    return new Date(`1970-01-01T${horaStr}:00.000Z`);
-};
+// --- Importación centralizada de utilidades de fecha/hora (DRY) ---
+import {
+    esFechaValida,
+    esHoraValida,
+    horaAMinutos,
+    minutosAHora,
+    fechaADateUTC,
+    horaADateUTC,
+} from '../utils/date.utils.js';
 
 // =============================================================================
 // FUNCIONES DE NOTIFICACIÓN (ASÍNCRONAS - FIRE AND FORGET)
@@ -313,8 +257,34 @@ export const createReserva = async (req, res) => {
         // Garantiza atomicidad: si falla la inserción de cualquier fila en
         // detalle_reserva, se hace rollback completo y no queda una reserva
         // huérfana sin sus servicios asociados.
+        //
+        // PREVENCIÓN DE RESERVAS DUPLICADAS (RACE CONDITION):
+        // Antes de insertar, verificamos dentro de la transacción si existe
+        // alguna reserva no cancelada que se superponga con el rango horario
+        // solicitado. Esto evita que dos usuarios reserven el mismo slot
+        // simultáneamente (el segundo recibirá un 409 Conflict).
         // -------------------------------------------------------------------------
         const reservaCreada = await prisma.$transaction(async (tx) => {
+            // 0. Verificar colisión de horarios dentro de la transacción
+            //    Hay colisión si: hora_inicio_existente < hora_fin_nueva
+            //                  AND hora_fin_existente > hora_inicio_nueva
+            const conflicto = await tx.reservas.findFirst({
+                where: {
+                    fecha_turno: fechaADateUTC(fecha_turno),
+                    estado: { not: 'Cancelada' },
+                    hora_inicio: { lt: horaADateUTC(hora_fin) },
+                    hora_fin: { gt: horaADateUTC(hora_inicio) },
+                },
+            });
+
+            if (conflicto) {
+                // Lanzamos un error para que la transacción haga rollback.
+                // El catch externo captura este error y responde al cliente.
+                const error = new Error('El horario seleccionado ya no está disponible. Otro usuario reservó este turno.');
+                error.statusCode = 409;
+                throw error;
+            }
+
             // 1. Insertar la cabecera de la reserva
             const reserva = await tx.reservas.create({
                 data: {
@@ -384,10 +354,21 @@ export const createReserva = async (req, res) => {
         enviarNotificacionWhatsApp(reservaParaNotificacion, usuario, serviciosEnDB);
         insertarEventoCalendar(reservaParaNotificacion, usuario, serviciosEnDB);
     } catch (error) {
-        console.error('[reservas.controller] createReserva:', error);
-        return res.status(500).json({
+        // Si el error tiene statusCode personalizado (ej: 409 por conflicto de horario),
+        // lo usamos directamente. Si no, es un error interno inesperado (500).
+        const statusCode = error.statusCode || 500;
+        const mensaje = error.statusCode
+            ? error.message
+            : 'Error interno del servidor al crear la reserva.';
+
+        // Solo logueamos como error los 500 inesperados, no los 409 de negocio
+        if (!error.statusCode) {
+            console.error('[reservas.controller] createReserva:', error);
+        }
+
+        return res.status(statusCode).json({
             ok: false,
-            mensaje: 'Error interno del servidor al crear la reserva.',
+            mensaje,
         });
     }
 };

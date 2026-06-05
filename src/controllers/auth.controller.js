@@ -9,6 +9,9 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import prisma from '../config/db.js';
 
+// --- Importación centralizada de utilidades de fecha/hora (DRY) ---
+import { esFechaValida, esHoraValida, fechaADateUTC, horaADateUTC } from '../utils/date.utils.js';
+
 // ---------------------------------------------------------------------------
 // Configuración de constantes de autenticación desde variables de entorno.
 // Fallar en el arranque si los secretos críticos no están configurados es
@@ -37,48 +40,6 @@ const generarToken = (usuario) => {
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
     );
-};
-
-/**
- * Valida que un string tenga formato de fecha 'YYYY-MM-DD'.
- * @param {string} fecha - El string a validar.
- * @returns {boolean}
- */
-const esFechaValida = (fecha) => {
-    if (typeof fecha !== 'string') return false;
-    return /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(fecha);
-};
-
-/**
- * Valida que un string tenga formato de hora 'HH:MM'.
- * @param {string} hora - El string a validar.
- * @returns {boolean}
- */
-const esHoraValida = (hora) => {
-    if (typeof hora !== 'string') return false;
-    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hora);
-};
-
-/**
- * Construye un objeto Date UTC "puro" para campos @db.Date.
- * Evita desfases de zona horaria: '1990-06-15' siempre se guarda como
- * 1990-06-15 en la DB, sin importar la TZ del servidor.
- * @param {string} fechaStr - Fecha en formato 'YYYY-MM-DD'.
- * @returns {Date}
- */
-const fechaADateUTC = (fechaStr) => {
-    const [anio, mes, dia] = fechaStr.split('-').map(Number);
-    return new Date(Date.UTC(anio, mes - 1, dia));
-};
-
-/**
- * Construye un objeto Date UTC "puro" para campos @db.Time(6).
- * Usa la fecha base 1970-01-01 como convención para valores de tipo TIME.
- * @param {string} horaStr - Hora en formato 'HH:MM'.
- * @returns {Date}
- */
-const horaADateUTC = (horaStr) => {
-    return new Date(`1970-01-01T${horaStr}:00.000Z`);
 };
 
 // =============================================================================

@@ -1,0 +1,40 @@
+{
+  "name": "sitio_natastral",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BrianSabio/Sitio_NatAstral.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/BrianSabio/Sitio_NatAstral/issues"
+  },
+  "homepage": "https://github.com/BrianSabio/Sitio_NatAstral#readme",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.7.0",
+    "googleapis": "^173.0.0",
+    "jsonwebtoken": "^9.0.3"
+  },
+  "devDependencies": {
+    "@prisma/config": "^7.8.0",
+    "@types/node": "^25.9.1",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.8.0"
+  }
+}

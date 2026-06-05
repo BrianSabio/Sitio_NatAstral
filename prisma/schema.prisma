@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model detalle_reserva {
+  id               Int        @id @default(autoincrement())
+  reserva_id       Int?
+  servicio_id      Int?
+  precio_congelado Decimal    @db.Decimal(10, 2)
+  reservas         reservas?  @relation(fields: [reserva_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  servicios        servicios? @relation(fields: [servicio_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model disponibilidad {
+  id          Int      @id @default(autoincrement())
+  dia_semana  Int
+  hora_inicio DateTime @db.Time(6)
+  hora_fin    DateTime @db.Time(6)
+  activo      Boolean? @default(true)
+}
+
+model reservas {
+  id              Int               @id @default(autoincrement())
+  usuario_id      Int?
+  fecha_turno     DateTime          @db.Date
+  hora_inicio     DateTime          @db.Time(6)
+  hora_fin        DateTime          @db.Time(6)
+  estado          estado_reserva?   @default(Pendiente)
+  total_pagar     Decimal           @db.Decimal(10, 2)
+  fecha_creacion  DateTime?         @default(now()) @db.Timestamp(6)
+  detalle_reserva detalle_reserva[]
+  usuarios        usuarios?         @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model servicios {
+  id               Int               @id @default(autoincrement())
+  nombre           String            @db.VarChar(100)
+  descripcion      String?
+  precio           Decimal           @db.Decimal(10, 2)
+  duracion_minutos Int
+  activo           Boolean?          @default(true)
+  detalle_reserva  detalle_reserva[]
+}
+
+model usuarios {
+  id               Int        @id @default(autoincrement())
+  nombre           String     @db.VarChar(100)
+  apellido         String     @db.VarChar(100)
+  email            String     @unique @db.VarChar(150)
+  password_hash    String?    @db.VarChar(255)
+  telefono         String     @db.VarChar(20)
+  fecha_nacimiento DateTime   @db.Date
+  hora_nacimiento  DateTime   @db.Time(6)
+  ciudad_origen    String     @db.VarChar(150)
+  fecha_registro   DateTime?  @default(now()) @db.Timestamp(6)
+  reservas         reservas[]
+}
+
+enum estado_reserva {
+  Pendiente
+  Confirmada
+  Cancelada
+  Completada
+}

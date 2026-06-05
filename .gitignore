@@ -1,0 +1,26 @@
+# Dependencias e instaladores
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno y credenciales (CRÍTICO)
+.env
+.env.local
+.env.production
+
+# Configuraciones de editores e IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Prisma v7 y Generados
+# Ocultamos el cliente generado localmente para que no pese en Git
+/src/generated/
+
+# Logs del sistema y del agente de Antigravity
+*.log
+.agents/logs/

@@ -170,7 +170,7 @@ export const actualizarServicio = async (req, res) => {
         // --- Construir el objeto de datos solo con los campos que vienen en el body ---
         // Esto permite actualizaciones parciales (PATCH-like behavior en PUT)
         const datosAActualizar = {};
-        const { nombre, descripcion, precio, duracion_minutos } = req.body;
+        const { nombre, descripcion, precio, duracion_minutos, activo } = req.body;
 
         if (nombre !== undefined) {
             if (typeof nombre !== 'string' || nombre.trim().length === 0) {
@@ -207,6 +207,10 @@ export const actualizarServicio = async (req, res) => {
                 });
             }
             datosAActualizar.duracion_minutos = duracionNum;
+        }
+
+        if (activo !== undefined) {
+            datosAActualizar.activo = activo;
         }
 
         // Si el body llegó vacío no hay nada que actualizar

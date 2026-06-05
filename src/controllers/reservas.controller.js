@@ -302,7 +302,7 @@ export const createReserva = async (req, res) => {
         if (finEnMinutos > 1440) {
             return res.status(400).json({
                 ok: false,
-                mensaje: `Con los servicios seleccionados (${duracionTotal} min), la reserva excede la medianoche. Elegí un horario más temprano.`,
+                mensaje: `Con los servicios seleccionados (${duracionTotal} min), la reserva excede la medianoche. Elige un horario más temprano.`,
             });
         }
 

@@ -80,7 +80,7 @@ const LandingPage = () => {
             </h1>
 
             <p className="text-slate-400 text-base md:text-lg lg:text-xl font-light leading-relaxed max-w-lg">
-              Tu carta natal es el espejo de lo que aún no ves. Explora las energías que te componen y alinea tu camino con el universo.
+              A través de la astrología y la Psicología Analítica de Jung, exploramos los arquetipos, la sombra, el ánima y el ánimus para favorecer el autoconocimiento y acompañar el proceso de individuación: el camino hacia una versión más consciente y auténtica de uno mismo.
             </p>
 
             <div className="flex flex-wrap items-center gap-4 mt-4">

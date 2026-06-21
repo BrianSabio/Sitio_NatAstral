@@ -7,23 +7,30 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
+    console.log('[keepalive] inicio', new Date().toISOString());
+
     try {
         const result = await pool.query(
             'SELECT id FROM public.usuarios WHERE id = $1 LIMIT 1',
             [1]
         );
 
+        console.log('[keepalive] query ok', {
+            rowCount: result.rowCount,
+            row: result.rows[0] ?? null,
+        });
+
         return res.status(200).json({
             ok: true,
             found: result.rowCount > 0,
-            row: result.rows[0] ?? null
+            row: result.rows[0] ?? null,
         });
     } catch (error) {
-        console.error('keepalive error:', error);
+        console.error('[keepalive] error', error);
 
         return res.status(500).json({
             ok: false,
-            error: error.message
+            error: error.message,
         });
     }
 }

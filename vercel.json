@@ -1,5 +1,11 @@
 {
     "framework": "vite",
     "buildCommand": "cd frontend && npm install && npm run build",
-    "outputDirectory": "frontend/dist"
+    "outputDirectory": "frontend/dist",
+    "crons": [
+        {
+            "path": "/api/keepalive",
+            "schedule": "0 12 * * 1"
+        }
+    ]
 }
